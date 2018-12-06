@@ -1,0 +1,68 @@
+package org.firstinspires.ftc.teamcode;
+
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.util.ElapsedTime;
+
+/**
+ * Created by ashley.peake on 9/30/2018.
+ */
+
+@Autonomous (name = "Red1", group = "Autonomous")
+public class AutoRed1 extends LinearOpMode {
+
+    HardwareRoverRuckus Rover = new HardwareRoverRuckus();
+    ElapsedTime runtime = new ElapsedTime();
+
+    /* directions for each wheel --> power and encoder will be multiplied by this constant, so that
+       one method can be used for any direction (especially sideways when wheels on different sides
+     */
+
+    static final int Forward = 1;
+    static final int Reverse = -1;
+
+
+
+    @Override
+    public void runOpMode() {
+
+        telemetry.addData("init pressed", "about to initialize");
+        telemetry.update();
+
+        Rover.initializeRobot(hardwareMap);
+
+        telemetry.addData("Status", "Ready to run");
+        telemetry.update();
+
+        waitForStart();
+
+
+        //to be added - release from space pod and turn based on gyrosensor to face sideways
+
+        //drive left to the wall
+        Rover.driveMecanum(1, 24, Reverse, Forward, Reverse, Forward);
+
+        sleep(500);
+
+        //drive backwards to the depot
+        Rover.driveStraight(.6, 36, Reverse, Forward);
+
+            telemetry.addData("Encoder Count LF", Rover.leftFront.getCurrentPosition());
+            telemetry.addData("Encoder Count LB", Rover.leftBack.getCurrentPosition());
+            telemetry.addData("Encoder Count RF", Rover.rightFront.getCurrentPosition());
+            telemetry.addData("Encoder Count RB", Rover.rightBack.getCurrentPosition());
+            telemetry.update();
+
+        sleep(3000);
+
+        //to be added - drop team marker
+
+        //drive forwards to reach the crater & park there
+        Rover.driveStraight(.6, 40, Forward, Reverse);
+
+
+        }
+
+    }
+
+
