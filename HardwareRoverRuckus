@@ -1,0 +1,300 @@
+package org.firstinspires.ftc.teamcode;
+
+import com.qualcomm.hardware.bosch.BNO055IMU;
+import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.util.Range;
+
+import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.navigation.Acceleration;
+import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
+
+/**
+ * Created by ashley.peake on 8/30/2018.
+ */
+
+public class HardwareRoverRuckus {
+
+    //Wheels
+    public DcMotor leftFront;
+    public DcMotor leftBack;
+    public DcMotor rightFront;
+    public DcMotor rightBack;
+
+    //Arm Motors - Left & Right control lifting the arm; Extend controls the rack and pinion set to extend it
+    public DcMotor armLeft;
+    public DcMotor armRight;
+    public DcMotor armExtend;
+
+    public Servo leftCollector;
+    public Servo rightCollector;
+
+    double leftPower;
+    double rightPower;
+
+    BNO055IMU imu;
+
+    Orientation angles;
+    Acceleration gravity;
+
+
+    ElapsedTime driveTime = new ElapsedTime();
+
+    HardwareMap HWMap = null;
+
+
+//----------------------------------METHODS------------------------------------------
+
+
+    //Constructor
+    public HardwareRoverRuckus() {
+
+    }
+
+
+//---------------------------------INIT--ROBOT----------------------------------------
+    /*  This method allows us to initialize the motors and sensors only once.
+        It is used in every other program after "Init" is pressed.
+     */
+
+    public void initializeRobot(HardwareMap hwMap) {
+
+        HWMap = hwMap;
+
+        //initialize motors
+
+        leftFront = HWMap.dcMotor.get("leftFront");
+        leftBack = HWMap.dcMotor.get("leftBack");
+        rightFront = HWMap.dcMotor.get("rightFront");
+        rightBack = HWMap.dcMotor.get("rightBack");
+
+        armLeft = HWMap.dcMotor.get ("armLeft");
+        armRight = HWMap.dcMotor.get ("armRight");
+        armExtend = HWMap.dcMotor.get("armExtend");
+
+        leftCollector = HWMap.servo.get("leftCollector");
+        rightCollector = HWMap.servo.get("rightCollector");
+
+
+        armLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        armRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        armLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+
+
+        //initialize IMU sensor
+
+        BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
+        parameters.angleUnit           = BNO055IMU.AngleUnit.DEGREES;
+        parameters.accelUnit           = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
+        parameters.calibrationDataFile = "BNO055IMUCalibration.json"; // see the calibration sample opmode
+        parameters.loggingEnabled      = true;
+        parameters.loggingTag          = "IMU";
+        parameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
+
+
+        imu = HWMap.get(BNO055IMU.class, "imu");
+        imu.initialize(parameters);
+
+
+    }
+
+
+//--------------------------DRIVE--FORWARD--------------------------------------------
+
+    /*  This method allows the robot to drive forward based on encoder values.
+        A distance is given that is converted to an encoder position in the code.
+        leftDirection and rightDirection set the direction of the motors to allow
+        the robot to either mover straight ot turn.
+     */
+
+
+    public void driveStraight(double power, double totalInches, int leftDirection, int rightDirection){ //For driving
+
+        // declare variables for this method
+
+        int NewTarget;
+
+        //set encoder values to zero
+
+        leftFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        leftBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        // counts = inches * 1120 (counts per revolution)/ 4*pi (circumference of wheels)
+        // 1120/4*pi ~ 89 - we found that there was less error when given a precise number
+
+        NewTarget = (int)(totalInches * 89);
+
+        //get current position of the encoders at the start of the method
+
+        leftFront.setTargetPosition(leftDirection*NewTarget);
+        leftBack.setTargetPosition(leftDirection*NewTarget);
+        rightFront.setTargetPosition(rightDirection*NewTarget);
+        rightBack.setTargetPosition(rightDirection*NewTarget);
+
+        leftFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        leftBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rightFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rightBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        //reset the timeout time  and start motion
+
+        driveTime.reset();
+
+        leftFront.setPower(power*leftDirection);
+        leftBack.setPower(power*leftDirection);
+        rightFront.setPower(power*rightDirection);
+        rightBack.setPower(power*rightDirection);
+
+        while (leftFront.isBusy() && leftBack.isBusy() && rightFront.isBusy() && rightBack.isBusy()){
+
+        }
+
+        // stops all motion
+
+        leftFront.setPower(0.0);
+        leftBack.setPower(0.0);
+        rightFront.setPower(0.0);
+        rightBack.setPower(0.0);
+    }
+
+
+//------------------------------DRIVE--SIDEWAYS-----------------------------------------------------
+    /*  This method makes the robot move in a sideways direction.
+        It is separate from the other drive method because the motors on each side must turn
+        in opposite directions. (See Mecanum Drive diagram)
+        Because the weight on the robot is not evenly balanced, we found that each motor
+        needed to run at a slightly different power (and thus had a slightly different encoder count).
+     */
+
+
+
+    public void driveMecanum(double power, double totalInches, int leftFrontDirection, int leftBackDirection, int rightFrontDirection, int rightBackDirection){ //For driving
+
+        // declare variables for this method
+
+        int NewLeftFrontTarget;
+        int NewLeftBackTarget;
+        int NewRightFrontTarget;
+        int NewRightBackTarget;
+
+        //set encoder values to zero
+        leftFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        leftBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+
+        // counts = inches * 1120 (counts per revolution)/ 4*pi (circumference of wheels)
+        // 1120/4*pi ~ 89 - we found that there was less error when given a precise number
+
+        NewLeftBackTarget = (int)(totalInches * 89);
+        NewLeftFrontTarget = (int)(totalInches * 89 *.9);
+        NewRightBackTarget = (int)(totalInches * 89 *.85);
+        NewRightFrontTarget = (int)(totalInches * 89 *.68);
+
+        //get current position of the encoders at the start of the method
+
+        leftFront.setTargetPosition(leftFrontDirection*NewLeftFrontTarget);
+        leftBack.setTargetPosition(leftBackDirection*NewLeftBackTarget);
+        rightFront.setTargetPosition(rightFrontDirection*NewRightFrontTarget);
+        rightBack.setTargetPosition(rightBackDirection*NewRightBackTarget);
+
+        leftFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        leftBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rightFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rightBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        //reset the timeout time  and start motion
+
+        driveTime.reset();
+
+        //powers scaled scaled based on trials & by the same as encoder values, so that everything
+        //stops at the same time
+
+        leftFront.setPower(power*leftBackDirection*.9);
+        leftBack.setPower(power*leftFrontDirection);
+        rightFront.setPower(power*rightFrontDirection*.68);
+        rightBack.setPower(power*rightBackDirection*.85);
+
+        while (leftFront.isBusy() && leftBack.isBusy() && rightFront.isBusy() && rightBack.isBusy()){
+
+        }
+
+        // stops all motion
+
+        leftFront.setPower(0.0);
+        leftBack.setPower(0.0);
+        rightFront.setPower(0.0);
+        rightBack.setPower(0.0);
+    }
+
+
+//------------------------------------TURN-BY-IMU---------------------------------------------------
+
+    /*  This program allows the robot to turn based on the IMU Sensor that is built into the
+        REV hub. It is used to orient the robot once it lands from the lander during autonomous.
+     */
+
+    public void turnIMU (double power, int degrees){
+
+        if (degrees < 0){
+            leftPower = -power;
+            rightPower = power;
+        }
+
+        else if (degrees > 0){
+            leftPower = power;
+            rightPower = -power;
+        }
+
+        else return;
+
+        leftBack.setPower(leftPower);
+        leftFront.setPower(leftPower);
+        rightBack.setPower(rightPower);
+        rightFront.setPower(rightPower);
+
+    }
+
+    //------------------------------------LIFT-ARM---------------------------------------------------
+
+    /*  This program allows the robot to lift its arm to either attatch to the lander or place elements in it
+     */
+
+    public void liftArm (double power){
+
+        armRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        armLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+        armLeft.setPower(power);
+        armRight.setPower(-power);
+
+
+    }
+
+    public void liftArmEncoder (double power, int encoder, int direction){
+
+        armLeft.setTargetPosition(encoder * direction);
+        armRight.setTargetPosition(-encoder * direction);
+
+        armLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        armRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        armLeft.setPower(power * direction);
+        armRight.setPower(-power * direction);
+
+        while (armLeft.isBusy() && armRight.isBusy());
+
+
+    }
+
+
+
+    }
