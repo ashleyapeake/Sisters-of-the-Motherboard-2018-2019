@@ -40,7 +40,7 @@ public class AutoRed1 extends LinearOpMode {
         //to be added - release from space pod and turn based on gyrosensor to face sideways
 
         //drive left to the wall
-        Rover.driveMecanum(1, 24, Reverse, Forward, Reverse, Forward);
+        /* Rover.driveMecanum(1, 24, Reverse, Forward, Reverse, Forward);
 
         sleep(500);
 
@@ -59,7 +59,10 @@ public class AutoRed1 extends LinearOpMode {
 
         //drive forwards to reach the crater & park there
         Rover.driveStraight(.6, 40, Forward, Reverse);
+        */
+        sleep (1000);
 
+        Rover.turnIMU(.4, -45);
 
         }
 
