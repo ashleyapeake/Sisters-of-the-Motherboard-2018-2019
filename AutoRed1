@@ -1,0 +1,87 @@
+package org.firstinspires.ftc.teamcode;
+
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.util.ElapsedTime;
+
+/**
+ * Created by ashley.peake on 9/30/2018.
+ */
+
+@Autonomous (name = "Red1", group = "Autonomous")
+public class AutoRed1 extends LinearOpMode {
+
+    HardwareRoverRuckus Rover = new HardwareRoverRuckus();
+    ElapsedTime runtime = new ElapsedTime();
+
+    /* directions for each wheel --> power and encoder will be multiplied by this constant, so that
+       one method can be used for any direction (especially sideways when wheels on different sides
+     */
+
+    static final int Forward = 1;
+    static final int Reverse = -1;
+
+    //left: reverse, forward, forward, reverse
+    //right: forward, reverse, reverse, forward
+
+
+    @Override
+    public void runOpMode() {
+
+        telemetry.addData("init pressed", "about to initialize");
+        telemetry.update();
+
+        Rover.initializeRobot(hardwareMap);
+
+        telemetry.addData("Status", "Ready to run");
+        telemetry.update();
+
+        waitForStart();
+
+
+        //to be added - release from space pod
+
+        /* We need the camera/robot to be in a position where it can both more based on the images and can see the minerals.
+        I am not sure how to make that work but that is something we need to think about.
+
+        Ignoring the camera, the general idea would be to come down, go straight forward to get the gold mineral and back up so we don't hit the others.
+        Then drive at an angle (just sideways relative to the robot) to get to the wall. Turn based on the imu sensor (or vuforia whatever is good)
+        Then drive forward to the depot and back to park on the crater.
+
+        This shouldn't be too difficult and I think we should have time in the 30 seconds to do everything, which would be awesome.
+        If we can get this right, then by autonomous alone we will earn 80 points!!
+
+         */
+
+        //Vuforia
+
+        Rover.driveStraight(.4, 7.5, Forward, Reverse);
+
+        sleep(500);
+
+        //gold stuff
+
+        Rover.driveMecanum(.6, 42, Reverse, Forward, Reverse, Forward);
+
+        sleep (1000);
+
+        Rover.turnIMU(.4, -15);
+
+        sleep (1000);
+
+        Rover.driveStraight(.6, 48, Forward, Reverse);
+
+        sleep (500);
+
+        //claim depot
+
+        Rover.driveStraight(.6, 72, Reverse, Forward);
+
+        sleep (1000);
+
+
+        }
+
+    }
+
+
