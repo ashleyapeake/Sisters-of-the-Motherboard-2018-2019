@@ -123,17 +123,16 @@ public class VuforiaMineralTest extends LinearOpMode {
      * Initialize the Vuforia localization engine.
      */
     private void initVuforia() {
-        /*
-         * Configure Vuforia by creating a Parameter object, and passing it to the Vuforia engine.
-         */
-        VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters();
 
-        parameters.vuforiaLicenseKey = VUFORIA_KEY;
-        parameters.cameraName = hardwareMap.get(WebcamName.class, "Webcam 1");
+        int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
+        VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters(cameraMonitorViewId);
 
-        //  Instantiate the Vuforia engine
+        parameters.vuforiaLicenseKey = VUFORIA_KEY ;
+        parameters.cameraDirection   = VuforiaLocalizer.CameraDirection.BACK;
+
         vuforia = ClassFactory.getInstance().createVuforia(parameters);
 
+        //  Instantiate the Vuforia engine
         // Loading trackables is not necessary for the Tensor Flow Object Detection engine.
     }
 
