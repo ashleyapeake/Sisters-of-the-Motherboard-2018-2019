@@ -61,35 +61,58 @@ public class TeleOpRoverRuckus extends LinearOpMode {
             double turn = -gamepad1.left_stick_x;
 
 
-            if (gamepad1.x) { // drive robot at slower speed for fine adjustments while carrying gold
+            if (gamepad1.start) { // drive robot at slower speed for fine adjustments while carrying gold
 
-                Rover.leftFront.setPower((fwdBack + strafe + turn) * .25);
-                Rover.leftBack.setPower((fwdBack - strafe + turn) * .25);
-                Rover.rightFront.setPower((-fwdBack + strafe + turn) * .25);
-                Rover.rightBack.setPower((-fwdBack - strafe + turn) * .25);
+                Rover.leftFront.setPower((fwdBack + 2*strafe - turn) * .25);
+                Rover.leftBack.setPower((fwdBack - 1.5*strafe - turn) * .25);
+                Rover.rightFront.setPower((-fwdBack + 1.5*strafe - turn) * .25);
+                Rover.rightBack.setPower((-fwdBack - 1.5*strafe - turn) * .25);
 
             } else { // drive robot normally at full speed
 
-                Rover.leftFront.setPower((fwdBack + strafe + turn) * .9);
-                Rover.leftBack.setPower((fwdBack - strafe + turn) * .9);
-                Rover.rightFront.setPower((-fwdBack + strafe + turn) * .9);
-                Rover.rightBack.setPower((-fwdBack - strafe + turn) * .9);
+                Rover.leftFront.setPower((fwdBack + strafe - turn));
+                Rover.leftBack.setPower((fwdBack - strafe - turn) * .9);
+                Rover.rightFront.setPower((-fwdBack + strafe - turn) * .9);
+                Rover.rightBack.setPower((-fwdBack - strafe - turn));
 
             }
 
-            //Arm Movements
 
+            //ball collector thing
+
+            if (gamepad1.y) {
+                Rover.leftCollector.setPosition(.7);
+                Rover.rightCollector.setPosition(.3);
+            } else if (gamepad1.a) {
+                Rover.leftCollector.setPosition(0);
+                Rover.rightCollector.setPosition(1);
+            }
+
+            if (gamepad1.x){
+                Rover.rotateSweeper(1, 0);
+            } else if (gamepad1.b){
+                Rover.rotateSweeper(.5, .5);
+            }
+
+
+            //Ball Flap
+
+            if (gamepad2.x) {
+                Rover.rotateFlap(1);
+            } else if (gamepad2.a){
+                Rover.rotateFlap(.5);
+            } else if (gamepad2.b){
+                Rover.rotateFlap(0);
+            }
+
+
+           //Arm Movements
 
             if (gamepad2.y) {
-                Rover.liftArmEncoder(.5, 840, 1);
-            } else if (gamepad2.a) {
-                Rover.liftArmEncoder(1, 500, -1);
-            } else if (gamepad2.x) {
-                Rover.liftArmEncoder(.5, 350, 1);
-            } else if (gamepad2.back) {
-                Rover.liftArm(-gamepad2.right_stick_y);
+                Rover.liftArmEncoder(-.5, -500, 1);
+
             } else {
-                Rover.liftArm(-gamepad2.right_stick_y * .6);
+                Rover.liftArm(gamepad2.right_stick_y * .6 + gamepad2.left_stick_y);
             }
 
 
@@ -105,20 +128,6 @@ public class TeleOpRoverRuckus extends LinearOpMode {
                 Rover.armExtend.setPower(0);
             }
 
-            //ball collector thing
-
-            if (gamepad1.y) {
-                Rover.leftCollector.setPosition(1);
-                Rover.rightCollector.setPosition(0);
-
-            } else if (gamepad1.a) {
-                Rover.leftCollector.setPosition(0);
-                Rover.rightCollector.setPosition(1);
-
-            } else if (gamepad1.b) {
-                Rover.leftCollector.setPosition(.5);
-                Rover.rightCollector.setPosition(.5);
-            }
 
         }
 
@@ -208,4 +217,5 @@ public class TeleOpRoverRuckus extends LinearOpMode {
 
 
     }
+
 
